@@ -14,6 +14,7 @@
         |---------------|------------------------------|
         | SEQ1          | Score1                       | 
         | SEQ2          | Score2                       |
+        | SEQ3          | Score3                       |
         | ...           | ...                          | 
 
         - the predictions column should contain the predicted sequence and the scores should be the models confidence score or assigned probabilities
