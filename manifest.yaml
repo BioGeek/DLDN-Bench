@@ -1,0 +1,33 @@
+kind: AIchorManifest
+apiVersion: 0.2.3
+
+builder:
+  image: dldn-bench-instanovo-aichor
+  target: dldn-bench-instanovo-aichor
+  dockerfile: ./Dockerfile
+  context: .
+
+spec:
+  operator: pytorch
+  image: dldn-bench-instanovo-aichor
+  command: "bash scripts/aichor/run_all.sh"
+  tensorboard:
+    enabled: false
+  storage:
+    sharedVolume:
+      mountPoint: "/mnt/storage"
+      sizeGB: 150
+      storageClass: cephfs
+      accessMode: ReadWriteMany
+  types:
+    worker:
+      count: 1
+      resources:
+        cpus: 16
+        ramRatio: 8
+        shmSizeGB: 16
+        accelerators:
+          gpu:
+            count: 1
+            product: NVIDIA-H100-80GB-HBM3
+            type: gpu

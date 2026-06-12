@@ -1,0 +1,33 @@
+[build-system]
+requires = ["setuptools>=75"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "dldn-bench-aichor"
+version = "0.1.0"
+description = "AIchor runner for DLDN-Bench InstaNovo comparisons"
+readme = "README.md"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+  "fastparquet==2024.11.0",
+  "instanovo==1.2.2",
+  "lxml>=5.3",
+  "matplotlib>=3.10",
+  "matplotlib-venn>=1.1.1",
+  "pandas>=2.2",
+  "pyarrow>=22.0",
+  "pyteomics==4.7.5",
+  "scikit-learn>=1.6",
+  "spectrum-utils>=0.5",
+  "tqdm>=4.67",
+]
+
+[tool.setuptools]
+py-modules = [
+  "calc_and_plot_precision_coverage",
+  "calculate_criteria",
+  "constants",
+  "create_result_csv",
+  "create_venn_plots",
+  "utils",
+]
