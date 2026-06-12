@@ -15,13 +15,13 @@ The job:
 1. Downloads only relevant Zenodo files for each selected dataset: the annotated MGF and the old InstaNovo prediction CSV.
 2. Runs latest InstaNovo transformer prediction on each MGF.
 3. Computes v1.1 vs v1.2.0 peptide and amino-acid AUC metrics.
-4. Writes persistent outputs under `$AICHOR_OUTPUT_PATH`.
+4. Writes outputs locally during execution, then syncs them to `$AICHOR_OUTPUT_PATH`.
 
-Large input data is downloaded to `/mnt/storage/dldn-bench/data` by default.
+Large input data is downloaded to `/mnt/storage/dldn-bench/data` by default. When `$AICHOR_OUTPUT_PATH` is an `s3://` bucket, output files are staged under `/mnt/storage/dldn-bench/outputs` and uploaded with `scripts/aichor/sync_outputs.py` on exit.
 
 ## Outputs
 
-The following are written below `$AICHOR_OUTPUT_PATH`:
+The following are synced below `$AICHOR_OUTPUT_PATH`:
 
 - `downloads/zenodo_downloads.json`
 - `logs/environment.txt`

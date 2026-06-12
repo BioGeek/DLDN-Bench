@@ -8,9 +8,15 @@ else
   DATASETS=(PXD043425 PXD006882 PXD012824 PXD043200)
 fi
 
-OUTPUT_ROOT="${AICHOR_OUTPUT_PATH:-${PWD}/aichor_outputs}"
 WORK_ROOT="${DLDN_WORKDIR:-/mnt/storage/dldn-bench}"
 DATA_DIR="${DLDN_DATA_DIR:-${WORK_ROOT}/data}"
+REMOTE_OUTPUT_ROOT="${AICHOR_OUTPUT_PATH:-}"
+if [[ "${REMOTE_OUTPUT_ROOT}" == s3://* ]]; then
+  OUTPUT_ROOT="${DLDN_LOCAL_OUTPUT_DIR:-${WORK_ROOT}/outputs}"
+else
+  OUTPUT_ROOT="${REMOTE_OUTPUT_ROOT:-${PWD}/aichor_outputs}"
+  REMOTE_OUTPUT_ROOT=""
+fi
 PREDICTIONS_DIR="${OUTPUT_ROOT}/predictions"
 METRICS_DIR="${OUTPUT_ROOT}/metrics"
 LOG_DIR="${OUTPUT_ROOT}/logs"
@@ -23,10 +29,23 @@ NUM_BEAMS="${DLDN_NUM_BEAMS:-5}"
 
 mkdir -p "${DATA_DIR}" "${PREDICTIONS_DIR}" "${METRICS_DIR}" "${LOG_DIR}"
 
+sync_outputs() {
+  local status=$?
+  if [[ -n "${REMOTE_OUTPUT_ROOT}" ]]; then
+    echo "Syncing outputs to ${REMOTE_OUTPUT_ROOT}"
+    python scripts/aichor/sync_outputs.py \
+      --source "${OUTPUT_ROOT}" \
+      --destination "${REMOTE_OUTPUT_ROOT}" || true
+  fi
+  exit "${status}"
+}
+trap sync_outputs EXIT
+
 {
   echo "Started: $(date --iso-8601=seconds)"
   echo "Datasets: ${DATASETS[*]}"
   echo "Output root: ${OUTPUT_ROOT}"
+  echo "Remote output root: ${REMOTE_OUTPUT_ROOT:-<none>}"
   echo "Work root: ${WORK_ROOT}"
   echo "Data dir: ${DATA_DIR}"
   echo "Model: ${MODEL}"
