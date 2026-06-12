@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import subprocess
 import sys
 import time
@@ -60,7 +61,9 @@ def main() -> int:
         ]
         print("Running:", " ".join(command))
         start = time.time()
-        subprocess.run(command, check=True)
+        env = os.environ.copy()
+        env.pop("AICHOR_OUTPUT_PATH", None)
+        subprocess.run(command, check=True, env=env)
         elapsed_seconds = time.time() - start
         runs.append(
             {
