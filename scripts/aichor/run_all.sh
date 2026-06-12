@@ -70,6 +70,14 @@ python scripts/aichor/download_zenodo_data.py \
   --datasets "${DATASETS[@]}" \
   2>&1 | tee "${LOG_DIR}/download.log"
 
+if [[ -n "${DLDN_RECOVER_PREDICTIONS_FROM:-}" ]]; then
+  python scripts/aichor/recover_predictions.py \
+    --source-output-root "${DLDN_RECOVER_PREDICTIONS_FROM}" \
+    --output-dir "${PREDICTIONS_DIR}" \
+    --datasets "${DATASETS[@]}" \
+    2>&1 | tee "${LOG_DIR}/recover_predictions.log"
+fi
+
 python scripts/aichor/run_instanovo_predictions.py \
   --data-dir "${DATA_DIR}" \
   --output-dir "${PREDICTIONS_DIR}" \

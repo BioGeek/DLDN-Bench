@@ -26,6 +26,7 @@ The following are synced below `$AICHOR_OUTPUT_PATH`:
 - `downloads/zenodo_downloads.json`
 - `logs/environment.txt`
 - `logs/download.log`
+- `logs/recover_predictions.log` when `DLDN_RECOVER_PREDICTIONS_FROM` is set
 - `logs/predict.log`
 - `logs/compare.log`
 - `predictions/*_instanovo_v1.2.0_pred.csv`
@@ -47,6 +48,7 @@ Environment variables:
 - `DLDN_NUM_BEAMS`: beam search width. Default: `5`.
 - `DLDN_WORKDIR`: working directory for large input data. Default: `/mnt/storage/dldn-bench`.
 - `DLDN_SAVE_ALIGNED`: set to `1` to save aligned scored rows.
+- `DLDN_RECOVER_PREDICTIONS_FROM`: optional previous AIchor output prefix. Existing prediction CSVs are copied from its `predictions/` directory before running InstaNovo.
 
 ## CLI Setup
 
