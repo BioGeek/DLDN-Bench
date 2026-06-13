@@ -15,6 +15,16 @@ from pathlib import Path
 DEFAULT_DATASETS = ("PXD043425", "PXD006882", "PXD012824", "PXD043200")
 
 
+def instanovo_env() -> dict[str, str]:
+    """Return an environment that prevents InstaNovo's internal S3 upload hook."""
+    env = os.environ.copy()
+    for key in list(env):
+        if key == "AICHOR_OUTPUT_PATH" or key.startswith(("AWS_", "S3_")):
+            env.pop(key, None)
+    env.pop("MLFLOW_S3_ENDPOINT_URL", None)
+    return env
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--data-dir", required=True, type=Path)
@@ -61,9 +71,16 @@ def main() -> int:
         ]
         print("Running:", " ".join(command))
         start = time.time()
-        env = os.environ.copy()
-        env.pop("AICHOR_OUTPUT_PATH", None)
-        subprocess.run(command, check=True, env=env)
+        try:
+            subprocess.run(command, check=True, env=instanovo_env())
+        except subprocess.CalledProcessError:
+            if not output_path.exists() or output_path.stat().st_size == 0:
+                raise
+            print(
+                "InstaNovo exited non-zero after writing predictions; "
+                f"keeping completed output: {output_path}",
+                file=sys.stderr,
+            )
         elapsed_seconds = time.time() - start
         runs.append(
             {

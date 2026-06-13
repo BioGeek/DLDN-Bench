@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Recover completed InstaNovo prediction CSVs from an earlier AIchor output."""
+"""Recover completed InstaNovo prediction CSVs from earlier AIchor outputs."""
 
 from __future__ import annotations
 
@@ -22,7 +22,7 @@ def remote_prediction_path(source_output_root: str, dataset: str) -> str:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--source-output-root", required=True)
+    parser.add_argument("--source-output-root", required=True, nargs="+")
     parser.add_argument("--output-dir", required=True, type=Path)
     parser.add_argument("--datasets", nargs="+", default=list(DEFAULT_DATASETS))
     parser.add_argument("--force", action="store_true")
@@ -39,17 +39,24 @@ def main() -> int:
             print(f"Keeping existing local prediction: {target}")
             continue
 
-        source = remote_prediction_path(args.source_output_root, dataset)
-        fs, source_path = fsspec.core.url_to_fs(source)
-        if not fs.exists(source_path):
-            print(f"No recovered prediction found for {dataset}: {source}")
-            continue
+        recovered_dataset = False
+        for source_root in args.source_output_root:
+            source = remote_prediction_path(source_root, dataset)
+            fs, source_path = fsspec.core.url_to_fs(source)
+            if not fs.exists(source_path):
+                print(f"No recovered prediction found for {dataset}: {source}")
+                continue
 
-        tmp_target = target.with_suffix(target.suffix + ".tmp")
-        fs.get_file(source_path, str(tmp_target))
-        tmp_target.replace(target)
-        recovered += 1
-        print(f"Recovered {source} -> {target}")
+            tmp_target = target.with_suffix(target.suffix + ".tmp")
+            fs.get_file(source_path, str(tmp_target))
+            tmp_target.replace(target)
+            recovered += 1
+            recovered_dataset = True
+            print(f"Recovered {source} -> {target}")
+            break
+
+        if not recovered_dataset:
+            continue
 
     print(f"Recovered {recovered} prediction file(s)")
     return 0

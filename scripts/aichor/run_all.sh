@@ -71,8 +71,9 @@ python scripts/aichor/download_zenodo_data.py \
   2>&1 | tee "${LOG_DIR}/download.log"
 
 if [[ -n "${DLDN_RECOVER_PREDICTIONS_FROM:-}" ]]; then
+  read -r -a RECOVERY_ROOTS <<< "${DLDN_RECOVER_PREDICTIONS_FROM//,/ }"
   python scripts/aichor/recover_predictions.py \
-    --source-output-root "${DLDN_RECOVER_PREDICTIONS_FROM}" \
+    --source-output-root "${RECOVERY_ROOTS[@]}" \
     --output-dir "${PREDICTIONS_DIR}" \
     --datasets "${DATASETS[@]}" \
     2>&1 | tee "${LOG_DIR}/recover_predictions.log"
