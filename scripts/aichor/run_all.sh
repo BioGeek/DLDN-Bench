@@ -79,17 +79,31 @@ if [[ -n "${DLDN_RECOVER_PREDICTIONS_FROM:-}" ]]; then
     2>&1 | tee "${LOG_DIR}/recover_predictions.log"
 fi
 
-python scripts/aichor/run_instanovo_predictions.py \
-  --data-dir "${DATA_DIR}" \
-  --output-dir "${PREDICTIONS_DIR}" \
-  --metadata-out "${OUTPUT_ROOT}/predictions/prediction_runs.json" \
-  --datasets "${DATASETS[@]}" \
-  --model "${MODEL}" \
-  --batch-size "${BATCH_SIZE}" \
-  --num-workers "${NUM_WORKERS}" \
-  --log-interval "${LOG_INTERVAL}" \
-  --num-beams "${NUM_BEAMS}" \
-  2>&1 | tee "${LOG_DIR}/predict.log"
+if [[ "${DLDN_COMPARE_ONLY:-0}" == "1" ]]; then
+  {
+    echo "Compare-only mode enabled; skipping InstaNovo prediction."
+    for dataset in "${DATASETS[@]}"; do
+      prediction_path="${PREDICTIONS_DIR}/${dataset}_instanovo_v1.2.0_pred.csv"
+      if [[ ! -s "${prediction_path}" ]]; then
+        echo "Missing recovered prediction: ${prediction_path}" >&2
+        exit 1
+      fi
+      echo "Using recovered prediction: ${prediction_path}"
+    done
+  } 2>&1 | tee "${LOG_DIR}/predict.log"
+else
+  python scripts/aichor/run_instanovo_predictions.py \
+    --data-dir "${DATA_DIR}" \
+    --output-dir "${PREDICTIONS_DIR}" \
+    --metadata-out "${OUTPUT_ROOT}/predictions/prediction_runs.json" \
+    --datasets "${DATASETS[@]}" \
+    --model "${MODEL}" \
+    --batch-size "${BATCH_SIZE}" \
+    --num-workers "${NUM_WORKERS}" \
+    --log-interval "${LOG_INTERVAL}" \
+    --num-beams "${NUM_BEAMS}" \
+    2>&1 | tee "${LOG_DIR}/predict.log"
+fi
 
 COMPARE_ARGS=()
 if [[ "${DLDN_SAVE_ALIGNED:-0}" == "1" ]]; then

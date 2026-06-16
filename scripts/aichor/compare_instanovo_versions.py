@@ -27,6 +27,30 @@ from utils import (
 DEFAULT_DATASETS = ("PXD043425", "PXD006882", "PXD012824", "PXD043200")
 
 
+def read_prediction_columns(
+    path: Path,
+    *,
+    schema_name: str,
+    sequence_candidates: tuple[str, ...],
+    score_candidates: tuple[str, ...],
+    sequence_out: str,
+    score_out: str,
+) -> pd.DataFrame:
+    columns = pd.read_csv(path, nrows=0).columns.tolist()
+    try:
+        sequence_col = next(col for col in sequence_candidates if col in columns)
+        score_col = next(col for col in score_candidates if col in columns)
+    except StopIteration as exc:
+        raise ValueError(
+            f"{path} does not match a supported {schema_name} schema. "
+            f"Columns: {columns}"
+        ) from exc
+
+    print(f"Using {schema_name} columns for {path.name}: {sequence_col}, {score_col}")
+    df = pd.read_csv(path, usecols=["scan_number", sequence_col, score_col])
+    return df.rename(columns={sequence_col: sequence_out, score_col: score_out})
+
+
 def clean_predictions(df: pd.DataFrame, tool_name: str) -> pd.DataFrame:
     seq_col = f"{tool_name}_seq"
     score_col = f"{tool_name}_score"
@@ -103,17 +127,24 @@ def main() -> int:
         new_path = args.predictions_dir / f"{dataset}_instanovo_v1.2.0_pred.csv"
         mgf_path = args.data_dir / f"{dataset}_benchmark_dataset.mgf"
 
-        old = pd.read_csv(old_path, usecols=["scan_number", "transformer_predictions", "transformer_log_probabilities"])
-        old = old.rename(
-            columns={
-                "transformer_predictions": "instanovo_v1_1_seq",
-                "transformer_log_probabilities": "instanovo_v1_1_score",
-            }
+        old = read_prediction_columns(
+            old_path,
+            schema_name="InstaNovo v1.1",
+            sequence_candidates=("transformer_predictions", "predictions"),
+            score_candidates=("transformer_log_probabilities", "log_probabilities", "log_probs"),
+            sequence_out="instanovo_v1_1_seq",
+            score_out="instanovo_v1_1_score",
         )
         old = clean_predictions(old, "instanovo_v1_1")
 
-        new = pd.read_csv(new_path, usecols=["scan_number", "predictions", "log_probs"])
-        new = new.rename(columns={"predictions": "instanovo_v1_2_seq", "log_probs": "instanovo_v1_2_score"})
+        new = read_prediction_columns(
+            new_path,
+            schema_name="InstaNovo v1.2",
+            sequence_candidates=("predictions",),
+            score_candidates=("log_probs", "log_probabilities"),
+            sequence_out="instanovo_v1_2_seq",
+            score_out="instanovo_v1_2_score",
+        )
         new = clean_predictions(new, "instanovo_v1_2")
 
         scan_numbers = set(old["scan_number"].astype(int)).intersection(set(new["scan_number"].astype(int)))
