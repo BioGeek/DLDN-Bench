@@ -15,8 +15,14 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
+from calc_and_plot_precision_coverage import plot_precision_coverage_curves
 from constants import aa_dict, unimod_dict
 from create_result_csv import create_result_csv
+from create_venn_plots import (
+    create_pyvenn_diagram,
+    get_correct_predictions_sets,
+    print_intersection_statistics,
+)
 from utils import (
     calculate_aa_precision_coverage,
     calculate_peptide_precision_coverage,
@@ -25,12 +31,40 @@ from utils import (
 
 
 DEFAULT_DATASETS = ("PXD043425", "PXD006882", "PXD012824", "PXD043200")
-ORIGINAL_TOOLS = (
+FIGURE1_ORIGINAL_TOOLS = (
     ("msgfplus_percolator", "MS-GF+ with Percolator", 0.997, 0.999),
     ("contranovo", "ContraNovo", 0.981, 0.990),
     ("instanovo", "InstaNovo v1.1 Zenodo transformer", 0.974, 0.985),
+    ("casanovo", "CasaNovo", None, None),
+    ("pi_helixnovo", "Pi-HelixNovo", None, None),
+    ("novor", "Novor", None, None),
+    ("pepnovoplus", "PepNovo+", None, None),
 )
 V12_TOOL = ("instanovo_v1_2", "InstaNovo v1.2.0 transformer", None, None)
+PUBLISHED_HEADLINE_TOOLS = ("msgfplus_percolator", "contranovo", "instanovo")
+FIGURE1_ORIGINAL_DISPLAY_NAMES = {
+    tool_name: label for tool_name, label, _, _ in FIGURE1_ORIGINAL_TOOLS
+}
+FIGURE1_PLUS_DISPLAY_NAMES = {
+    **FIGURE1_ORIGINAL_DISPLAY_NAMES,
+    V12_TOOL[0]: V12_TOOL[1],
+}
+FIGURE1_DE_NOVO_TOOLS = (
+    "pepnovoplus",
+    "novor",
+    "casanovo",
+    "pi_helixnovo",
+    "contranovo",
+    "instanovo",
+)
+FIGURE1_DE_NOVO_PLUS_TOOLS = (
+    "pepnovoplus",
+    "novor",
+    "casanovo",
+    "pi_helixnovo",
+    "contranovo",
+    "instanovo_v1_2",
+)
 
 
 def calculate_metrics(df: pd.DataFrame, tool_name: str) -> dict[str, float | int]:
@@ -74,7 +108,7 @@ def create_original_intersection(data_dir: Path, work_dir: Path, dataset: str) -
 
 
 def load_original_subset(path: Path) -> pd.DataFrame:
-    tools = [tool_name for tool_name, _, _, _ in ORIGINAL_TOOLS]
+    tools = [tool_name for tool_name, _, _, _ in FIGURE1_ORIGINAL_TOOLS]
     usecols = ["title", "pos_index", "groundtruth_seq"]
     for tool_name in tools:
         usecols.extend([f"{tool_name}_seq", f"{tool_name}_score"])
@@ -145,6 +179,50 @@ def score_rowset(
     return rows
 
 
+def write_precision_coverage_plots(
+    df: pd.DataFrame,
+    *,
+    dataset: str,
+    rowset: str,
+    output_dir: Path,
+    tool_display_names: dict[str, str],
+) -> None:
+    plot_dir = output_dir / "figure1_precision_coverage"
+    table_dir = output_dir / "figure1_precision_coverage_tables"
+    plot_dir.mkdir(parents=True, exist_ok=True)
+    table_dir.mkdir(parents=True, exist_ok=True)
+    plot_precision_coverage_curves(
+        result_df=df,
+        tool_name_dict=tool_display_names,
+        benchmark_dataset_name=f"{dataset}_{rowset}",
+        save_plot_path=str(plot_dir),
+        save_tables_path=str(table_dir),
+    )
+
+
+def write_venn_plot(
+    df: pd.DataFrame,
+    *,
+    dataset: str,
+    rowset: str,
+    output_dir: Path,
+    tool_names: tuple[str, ...],
+) -> None:
+    venn_dir = output_dir / "figure1_venn"
+    venn_dir.mkdir(parents=True, exist_ok=True)
+    sets_dict = get_correct_predictions_sets(df, list(tool_names), use_exact=False, aa_dict=aa_dict)
+    print_intersection_statistics(sets_dict)
+    create_pyvenn_diagram(
+        sets_dict,
+        list(tool_names),
+        "",
+        venn_dir / f"{dataset}_{rowset}_de_novo_true_positive_venn.png",
+        figsize=(12, 10),
+        dpi=300,
+        show_numbers=True,
+    )
+
+
 def write_markdown(summary: pd.DataFrame, output_path: Path) -> None:
     lines = [
         "# Published Figure 1 AUC Reproduction",
@@ -190,6 +268,17 @@ def write_markdown(summary: pd.DataFrame, output_path: Path) -> None:
             ]
         )
 
+    lines.extend(
+        [
+            "",
+            "## Figure 1 Plot Outputs",
+            "",
+            "Updated precision-coverage plots are written under `figure1_precision_coverage/`.",
+            "The corresponding curve tables are written under `figure1_precision_coverage_tables/`.",
+            "True-positive de novo overlap plots are written under `figure1_venn/`.",
+        ]
+    )
+
     output_path.write_text("\n".join(lines) + "\n")
 
 
@@ -221,8 +310,22 @@ def main() -> int:
                 original,
                 dataset=dataset,
                 rowset="published_all_tools",
-                tools=ORIGINAL_TOOLS,
+                tools=FIGURE1_ORIGINAL_TOOLS,
             )
+        )
+        write_precision_coverage_plots(
+            original,
+            dataset=dataset,
+            rowset="published_all_tools",
+            output_dir=args.output_dir,
+            tool_display_names=FIGURE1_ORIGINAL_DISPLAY_NAMES,
+        )
+        write_venn_plot(
+            original,
+            dataset=dataset,
+            rowset="published_all_tools",
+            output_dir=args.output_dir,
+            tool_names=FIGURE1_DE_NOVO_TOOLS,
         )
         original_frames.append(original)
 
@@ -239,8 +342,22 @@ def main() -> int:
                     plus,
                     dataset=dataset,
                     rowset="published_all_tools_plus_v1_2",
-                    tools=(*ORIGINAL_TOOLS, V12_TOOL),
+                    tools=(*FIGURE1_ORIGINAL_TOOLS, V12_TOOL),
                 )
+            )
+            write_precision_coverage_plots(
+                plus,
+                dataset=dataset,
+                rowset="published_all_tools_plus_v1_2",
+                output_dir=args.output_dir,
+                tool_display_names=FIGURE1_PLUS_DISPLAY_NAMES,
+            )
+            write_venn_plot(
+                plus,
+                dataset=dataset,
+                rowset="published_all_tools_plus_v1_2",
+                output_dir=args.output_dir,
+                tool_names=FIGURE1_DE_NOVO_PLUS_TOOLS,
             )
             plus_frames.append(plus)
 
@@ -257,8 +374,22 @@ def main() -> int:
                 combined,
                 dataset="ALL",
                 rowset="published_all_tools",
-                tools=ORIGINAL_TOOLS,
+                tools=FIGURE1_ORIGINAL_TOOLS,
             )
+        )
+        write_precision_coverage_plots(
+            combined,
+            dataset="ALL",
+            rowset="published_all_tools",
+            output_dir=args.output_dir,
+            tool_display_names=FIGURE1_ORIGINAL_DISPLAY_NAMES,
+        )
+        write_venn_plot(
+            combined,
+            dataset="ALL",
+            rowset="published_all_tools",
+            output_dir=args.output_dir,
+            tool_names=FIGURE1_DE_NOVO_TOOLS,
         )
 
     if len(plus_frames) > 1:
@@ -268,8 +399,22 @@ def main() -> int:
                 combined_plus,
                 dataset="ALL",
                 rowset="published_all_tools_plus_v1_2",
-                tools=(*ORIGINAL_TOOLS, V12_TOOL),
+                tools=(*FIGURE1_ORIGINAL_TOOLS, V12_TOOL),
             )
+        )
+        write_precision_coverage_plots(
+            combined_plus,
+            dataset="ALL",
+            rowset="published_all_tools_plus_v1_2",
+            output_dir=args.output_dir,
+            tool_display_names=FIGURE1_PLUS_DISPLAY_NAMES,
+        )
+        write_venn_plot(
+            combined_plus,
+            dataset="ALL",
+            rowset="published_all_tools_plus_v1_2",
+            output_dir=args.output_dir,
+            tool_names=FIGURE1_DE_NOVO_PLUS_TOOLS,
         )
 
     summary = pd.DataFrame(metric_rows)
