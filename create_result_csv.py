@@ -196,12 +196,34 @@ def create_result_csv(ground_truth_file_path,
 
     instanovo_result_df['pos_index'] = range(len(instanovo_result_df))
 
-    instanovo_result_df.rename(columns={'transformer_predictions':'instanovo_seq', 'transformer_log_probabilities':'instanovo_score', 
-                                'diffusion_predictions':'instanovoplus_seq', 'diffusion_log_probabilities':'instanovoplus_score'}, inplace=True)
+    instanovo_columns = instanovo_result_df.columns.tolist()
+    if 'transformer_predictions' in instanovo_columns and 'transformer_log_probabilities' in instanovo_columns:
+        instanovo_result_df.rename(columns={
+            'transformer_predictions': 'instanovo_seq',
+            'transformer_log_probabilities': 'instanovo_score',
+        }, inplace=True)
+    elif 'predictions' in instanovo_columns and 'log_probabilities' in instanovo_columns:
+        instanovo_result_df.rename(columns={
+            'predictions': 'instanovo_seq',
+            'log_probabilities': 'instanovo_score',
+        }, inplace=True)
+    else:
+        raise ValueError(
+            f"Unsupported InstaNovo schema for {instanovo_result_file_path}. "
+            f"Columns: {instanovo_columns}"
+        )
+
+    has_instanovoplus = (
+        'diffusion_predictions' in instanovo_columns
+        and 'diffusion_log_probabilities' in instanovo_columns
+    )
+    if has_instanovoplus:
+        instanovo_result_df.rename(columns={
+            'diffusion_predictions': 'instanovoplus_seq',
+            'diffusion_log_probabilities': 'instanovoplus_score',
+        }, inplace=True)
 
     instanovo_df = instanovo_filter_out_unspecified_mods(instanovo_result_df, unimod_dict, 'instanovo') # parse mods to expected format + filter out predictions with unspecified mods
-
-    instanovoplus_df = instanovo_filter_out_unspecified_mods(instanovo_result_df, unimod_dict, 'instanovoplus') # parse mods to expected format + filter out predictions with unspecified mods
 
     # extract relevant cols and merge
     
@@ -209,9 +231,12 @@ def create_result_csv(ground_truth_file_path,
 
     merged_df = merged_df.merge(instanovo_df, how='inner', on='pos_index')
 
-    instanovoplus_df = instanovoplus_df[['pos_index', 'instanovoplus_seq', 'instanovoplus_score']]
+    if has_instanovoplus:
+        instanovoplus_df = instanovo_filter_out_unspecified_mods(instanovo_result_df, unimod_dict, 'instanovoplus') # parse mods to expected format + filter out predictions with unspecified mods
 
-    merged_df = merged_df.merge(instanovoplus_df, how='inner', on='pos_index')
+        instanovoplus_df = instanovoplus_df[['pos_index', 'instanovoplus_seq', 'instanovoplus_score']]
+
+        merged_df = merged_df.merge(instanovoplus_df, how='inner', on='pos_index')
 
     ####################### additional result file #######################
 
