@@ -1,4 +1,4 @@
-# InstaNovo v1.2.2 AIchor Benchmark
+# InstaNovo v1.2.2 AIchor Full Benchmark
 
 Date: 2026-06-17
 Branch: `aichor`
