@@ -195,6 +195,32 @@ The same successful run also re-uploaded the four recovered v1.2.0 prediction CS
 output/095080d3-3f19-41c7-a45b-f1a95a27b43a/predictions/
 ```
 
+## Local Artifacts
+
+Repo-sized artifacts from the successful metrics and plot runs have been downloaded under:
+
+```text
+reports/artifacts/instanovo_v1_2_full_benchmark/
+```
+
+Included files:
+
+- `metrics/instanovo_v1_1_vs_v1_2_metrics.csv`
+- `metrics/instanovo_v1_1_vs_v1_2_metrics.json`
+- `metrics/instanovo_v1_1_vs_v1_2_metrics.md`
+- the ten precision-coverage PNGs from `output/095080d3-3f19-41c7-a45b-f1a95a27b43a/plots/`
+
+These local artifacts are `3.8M` total and are reasonable to keep in git. The recovered InstaNovo v1.2.0 prediction CSVs are not included because they are `2.1 GiB` total:
+
+| Dataset | Prediction CSV size |
+|---|---:|
+| `PXD043425` | 184.9 MiB |
+| `PXD006882` | 366.6 MiB |
+| `PXD012824` | 625.9 MiB |
+| `PXD043200` | 1014.3 MiB |
+
+For manuscript/Figure 1 reproduction, the more relevant artifacts will come from the all-tools run: `published_figure1_auc_reproduction.*`, `figure1_precision_coverage/`, `figure1_precision_coverage_tables/`, and `figure1_venn/`. Those should be downloaded after that run completes, while leaving any repeated `predictions/` CSVs in the AIchor S3 bucket.
+
 ## Earlier Local Calibration
 
 Before moving to AIchor, a 1% `PXD043425` v1.2.0 calibration run completed on the laptop GPU:

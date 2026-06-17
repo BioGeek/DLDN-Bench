@@ -1,0 +1,92 @@
+[
+  {
+    "dataset": "PXD043425",
+    "tool": "InstaNovo v1.1 Zenodo transformer",
+    "rows_scored": 358789,
+    "peptide_auc": 0.7985291146826752,
+    "aa_auc": 0.8809126886112855,
+    "peptide_auc_delta_vs_published": -0.1754708853173248,
+    "aa_auc_delta_vs_published": -0.10408731138871452
+  },
+  {
+    "dataset": "PXD043425",
+    "tool": "InstaNovo v1.2.0 transformer",
+    "rows_scored": 358789,
+    "peptide_auc": 0.8801456508814269,
+    "aa_auc": 0.9529205387401067,
+    "peptide_auc_delta_vs_published": -0.09385434911857304,
+    "aa_auc_delta_vs_published": -0.03207946125989325
+  },
+  {
+    "dataset": "PXD006882",
+    "tool": "InstaNovo v1.1 Zenodo transformer",
+    "rows_scored": 654557,
+    "peptide_auc": 0.9706607187289775,
+    "aa_auc": 0.9825900727235573,
+    "peptide_auc_delta_vs_published": -0.003339281271022454,
+    "aa_auc_delta_vs_published": -0.002409927276442736
+  },
+  {
+    "dataset": "PXD006882",
+    "tool": "InstaNovo v1.2.0 transformer",
+    "rows_scored": 654557,
+    "peptide_auc": 0.9823725442631528,
+    "aa_auc": 0.9936878096761069,
+    "peptide_auc_delta_vs_published": 0.008372544263152815,
+    "aa_auc_delta_vs_published": 0.008687809676106939
+  },
+  {
+    "dataset": "PXD012824",
+    "tool": "InstaNovo v1.1 Zenodo transformer",
+    "rows_scored": 1005566,
+    "peptide_auc": 0.9302158480909792,
+    "aa_auc": 0.9597113374465284,
+    "peptide_auc_delta_vs_published": -0.04378415190902074,
+    "aa_auc_delta_vs_published": -0.02528866255347162
+  },
+  {
+    "dataset": "PXD012824",
+    "tool": "InstaNovo v1.2.0 transformer",
+    "rows_scored": 1005566,
+    "peptide_auc": 0.9573303996602041,
+    "aa_auc": 0.9838370840642349,
+    "peptide_auc_delta_vs_published": -0.01666960033979592,
+    "aa_auc_delta_vs_published": -0.0011629159357651186
+  },
+  {
+    "dataset": "PXD043200",
+    "tool": "InstaNovo v1.1 Zenodo transformer",
+    "rows_scored": 1955469,
+    "peptide_auc": 0.9259319716496102,
+    "aa_auc": 0.9539880463576748,
+    "peptide_auc_delta_vs_published": -0.04806802835038981,
+    "aa_auc_delta_vs_published": -0.03101195364232523
+  },
+  {
+    "dataset": "PXD043200",
+    "tool": "InstaNovo v1.2.0 transformer",
+    "rows_scored": 1955469,
+    "peptide_auc": 0.941062772671711,
+    "aa_auc": 0.9686075237706245,
+    "peptide_auc_delta_vs_published": -0.032937227328288965,
+    "aa_auc_delta_vs_published": -0.016392476229375452
+  },
+  {
+    "dataset": "ALL",
+    "tool": "InstaNovo v1.1 Zenodo transformer",
+    "rows_scored": 3974381,
+    "peptide_auc": 0.9291085991674515,
+    "aa_auc": 0.9583580266277418,
+    "peptide_auc_delta_vs_published": -0.0448914008325485,
+    "aa_auc_delta_vs_published": -0.026641973372258154
+  },
+  {
+    "dataset": "ALL",
+    "tool": "InstaNovo v1.2.0 transformer",
+    "rows_scored": 3974381,
+    "peptide_auc": 0.9515496066161573,
+    "aa_auc": 0.9779756953904468,
+    "peptide_auc_delta_vs_published": -0.022450393383842693,
+    "aa_auc_delta_vs_published": -0.007024304609553167
+  }
+]
