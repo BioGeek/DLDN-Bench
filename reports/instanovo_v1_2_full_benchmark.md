@@ -57,7 +57,7 @@ Prediction work completed in AIchor and was recovered across runs:
 - `46c58e9d-b5f6-43ae-a18a-8112eeec7d6c`: recovered `PXD043425`, completed and uploaded `PXD006882`, then failed after post-save upload handling.
 - `b96234df-2fff-4239-8288-faeef8ae81b0`: recovered previous outputs, completed `PXD012824` and `PXD043200`, then failed during comparison before the v1.1 schema patch.
 - `7c3e0e59-35c9-41ea-81d3-ab8cbdb102fa`: compare-only run; recovered all four v1.2.0 prediction CSVs and completed metrics successfully.
-- `095080d3-3f19-41c7-a45b-f1a95a27b43a`: plot-only run submitted from `738acd6`; currently in AIchor Docker build at the last check.
+- `095080d3-3f19-41c7-a45b-f1a95a27b43a`: plot-only run submitted from `738acd6`; completed successfully and uploaded precision-coverage plots for all four datasets plus the combined `ALL` rowset.
 
 Successful metrics output prefix:
 
@@ -144,25 +144,36 @@ Plot job:
 095080d3-3f19-41c7-a45b-f1a95a27b43a
 ```
 
-Current plot-job status at last check:
+Plot-job status:
 
 ```text
-Building / Processing
+Succeeded / Completed
 ```
 
-Expected plot output prefix after completion:
+Plot output prefix:
 
 ```text
 output/095080d3-3f19-41c7-a45b-f1a95a27b43a/plots/
 ```
 
-Expected files include peptide and amino-acid precision-coverage PNGs for:
+Uploaded plot files:
 
-- `PXD043425`
-- `PXD006882`
-- `PXD012824`
-- `PXD043200`
-- `ALL`
+- `plots/PXD043425_peptide_precision_coverage.png`
+- `plots/PXD043425_aminoacid_precision_coverage.png`
+- `plots/PXD006882_peptide_precision_coverage.png`
+- `plots/PXD006882_aminoacid_precision_coverage.png`
+- `plots/PXD012824_peptide_precision_coverage.png`
+- `plots/PXD012824_aminoacid_precision_coverage.png`
+- `plots/PXD043200_peptide_precision_coverage.png`
+- `plots/PXD043200_aminoacid_precision_coverage.png`
+- `plots/ALL_peptide_precision_coverage.png`
+- `plots/ALL_aminoacid_precision_coverage.png`
+
+The same successful run also re-uploaded the four recovered v1.2.0 prediction CSVs under:
+
+```text
+output/095080d3-3f19-41c7-a45b-f1a95a27b43a/predictions/
+```
 
 ## Earlier Local Calibration
 
