@@ -19,7 +19,9 @@ else
 fi
 PREDICTIONS_DIR="${OUTPUT_ROOT}/predictions"
 METRICS_DIR="${OUTPUT_ROOT}/metrics"
+PLOTS_DIR="${OUTPUT_ROOT}/plots"
 LOG_DIR="${OUTPUT_ROOT}/logs"
+PLOT_INPUT_DIR="${DLDN_PLOT_INPUT_DIR:-${WORK_ROOT}/plot_inputs}"
 
 MODEL="${DLDN_INSTANOVO_MODEL:-instanovo-v1.2.0}"
 BATCH_SIZE="${DLDN_BATCH_SIZE:-128}"
@@ -27,7 +29,7 @@ NUM_WORKERS="${DLDN_NUM_WORKERS:-8}"
 LOG_INTERVAL="${DLDN_LOG_INTERVAL:-100}"
 NUM_BEAMS="${DLDN_NUM_BEAMS:-5}"
 
-mkdir -p "${DATA_DIR}" "${PREDICTIONS_DIR}" "${METRICS_DIR}" "${LOG_DIR}"
+mkdir -p "${DATA_DIR}" "${PREDICTIONS_DIR}" "${METRICS_DIR}" "${PLOTS_DIR}" "${LOG_DIR}"
 
 sync_outputs() {
   local status=$?
@@ -105,17 +107,31 @@ else
     2>&1 | tee "${LOG_DIR}/predict.log"
 fi
 
-COMPARE_ARGS=()
-if [[ "${DLDN_SAVE_ALIGNED:-0}" == "1" ]]; then
-  COMPARE_ARGS+=(--save-aligned)
+if [[ "${DLDN_SKIP_COMPARE:-0}" == "1" ]]; then
+  echo "Skipping metrics comparison." 2>&1 | tee "${LOG_DIR}/compare.log"
+else
+  COMPARE_ARGS=()
+  if [[ "${DLDN_SAVE_ALIGNED:-0}" == "1" ]]; then
+    COMPARE_ARGS+=(--save-aligned)
+  fi
+
+  python scripts/aichor/compare_instanovo_versions.py \
+    --data-dir "${DATA_DIR}" \
+    --predictions-dir "${PREDICTIONS_DIR}" \
+    --output-dir "${METRICS_DIR}" \
+    --datasets "${DATASETS[@]}" \
+    "${COMPARE_ARGS[@]}" \
+    2>&1 | tee "${LOG_DIR}/compare.log"
 fi
 
-python scripts/aichor/compare_instanovo_versions.py \
-  --data-dir "${DATA_DIR}" \
-  --predictions-dir "${PREDICTIONS_DIR}" \
-  --output-dir "${METRICS_DIR}" \
-  --datasets "${DATASETS[@]}" \
-  "${COMPARE_ARGS[@]}" \
-  2>&1 | tee "${LOG_DIR}/compare.log"
+if [[ "${DLDN_RUN_PLOTS:-0}" == "1" ]]; then
+  python scripts/aichor/build_and_plot_precision_coverage.py \
+    --data-dir "${DATA_DIR}" \
+    --predictions-dir "${PREDICTIONS_DIR}" \
+    --aligned-dir "${PLOT_INPUT_DIR}" \
+    --output-dir "${PLOTS_DIR}" \
+    --datasets "${DATASETS[@]}" \
+    2>&1 | tee "${LOG_DIR}/plot_precision_coverage.log"
+fi
 
 echo "Finished: $(date --iso-8601=seconds)" | tee -a "${LOG_DIR}/environment.txt"

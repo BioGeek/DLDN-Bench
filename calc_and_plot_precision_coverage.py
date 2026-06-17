@@ -9,6 +9,11 @@ from sklearn.metrics import auc
 from constants import aa_dict, tool_name_plot_name_dict
 from utils import calculate_peptide_precision_coverage, calculate_aa_precision_coverage
 
+default_tool_display_names = {
+    "instanovo_v1_1": "InstaNovo v1.1 Zenodo transformer",
+    "instanovo_v1_2": "InstaNovo v1.2.0 transformer",
+}
+
 def get_tool_names_from_columns(df):
     """Extract tool names from columns that follow {toolname}_seq and {toolname}_score pattern"""
     tool_names = set()
@@ -176,19 +181,21 @@ if __name__ == "__main__":
     available_tools = [tool for tool in available_tools if tool not in excluded_tools]
     print(f"Found tools: {available_tools}")
 
-    # Extend the dictionary with newly discovered tools
+    # Build a plot-name dictionary for only the tools present in the input file.
+    plot_tool_name_dict = {}
     for tool in available_tools:
         if tool not in tool_name_plot_name_dict:
             # Use the tool name as the plot name (or customize as needed)
-            tool_name_plot_name_dict[tool] = tool
+            tool_name_plot_name_dict[tool] = default_tool_display_names.get(tool, tool)
             print(f"Added new tool: {tool}")
+        plot_tool_name_dict[tool] = tool_name_plot_name_dict[tool]
 
-    print(f"Final tool dictionary: {tool_name_plot_name_dict}")
+    print(f"Final tool dictionary: {plot_tool_name_dict}")
     
     # Run analysis
     plot_precision_coverage_curves(
         result_df=result_df,
-        tool_name_dict=tool_name_plot_name_dict,
+        tool_name_dict=plot_tool_name_dict,
         benchmark_dataset_name=args.dataset,
         save_plot_path=args.output,
         save_tables_path=args.tables
