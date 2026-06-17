@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Download the DLDN-Bench MGF and InstaNovo v1.1 files from Zenodo."""
+"""Download selected DLDN-Bench files from Zenodo."""
 
 from __future__ import annotations
 
@@ -13,7 +13,25 @@ from pathlib import Path
 
 DEFAULT_RECORD_ID = "19627459"
 DEFAULT_DATASETS = ("PXD043425", "PXD006882", "PXD012824", "PXD043200")
+DEFAULT_INCLUDES = ("mgf", "instanovo")
 ZENODO_API = "https://zenodo.org/api/records/{record_id}"
+
+FILE_SUFFIXES = {
+    "mgf": ("benchmark_dataset.mgf",),
+    "instanovo": ("benchmark_dataset_instanovo_pred.csv",),
+    "msgfplus": ("benchmark_dataset_msgfplus_pred.parquet",),
+    "pepnovoplus": ("benchmark_dataset_pepnovoplus_pred.txt",),
+    "novor": ("benchmark_dataset_novor_pred.csv",),
+    "casanovo": ("benchmark_dataset_casanovo_pred.mztab",),
+    "pi_helixnovo": ("benchmark_dataset_pi_helixnovo_pred.txt",),
+    "contranovo": ("benchmark_dataset_contranovo_pred.txt",),
+}
+
+PXD043200_CONTRANOVO_PARTS = (
+    "PXD043200_benchmark_dataset_contranovo_pred_1.txt",
+    "PXD043200_benchmark_dataset_contranovo_pred_2.txt",
+    "PXD043200_benchmark_dataset_contranovo_pred_3.txt",
+)
 
 
 def md5sum(path: Path) -> str:
@@ -41,11 +59,25 @@ def fetch_record(record_id: str) -> dict:
         return json.load(response)
 
 
-def wanted_file_names(datasets: list[str]) -> list[str]:
+def wanted_file_names(datasets: list[str], includes: list[str]) -> list[str]:
     names: list[str] = []
     for dataset in datasets:
-        names.append(f"{dataset}_benchmark_dataset.mgf")
-        names.append(f"{dataset}_benchmark_dataset_instanovo_pred.csv")
+        for include in includes:
+            if include == "all_predictions":
+                for prediction_include in FILE_SUFFIXES:
+                    if prediction_include != "mgf":
+                        names.extend(wanted_file_names([dataset], [prediction_include]))
+                continue
+
+            if include == "contranovo" and dataset == "PXD043200":
+                names.extend(PXD043200_CONTRANOVO_PARTS)
+                continue
+
+            if include not in FILE_SUFFIXES:
+                raise ValueError(f"Unsupported include: {include}")
+
+            for suffix in FILE_SUFFIXES[include]:
+                names.append(f"{dataset}_{suffix}")
     return names
 
 
@@ -55,6 +87,16 @@ def main() -> int:
     parser.add_argument("--output-dir", required=True, type=Path)
     parser.add_argument("--metadata-out", required=True, type=Path)
     parser.add_argument("--datasets", nargs="+", default=list(DEFAULT_DATASETS))
+    parser.add_argument(
+        "--include",
+        nargs="+",
+        default=list(DEFAULT_INCLUDES),
+        choices=sorted([*FILE_SUFFIXES.keys(), "all_predictions"]),
+        help=(
+            "File groups to download. Defaults to the original AIchor InstaNovo "
+            "comparison inputs: mgf instanovo."
+        ),
+    )
     parser.add_argument("--force", action="store_true")
     args = parser.parse_args()
 
@@ -64,10 +106,16 @@ def main() -> int:
         "record_id": args.record_id,
         "doi": record["doi"],
         "datasets": args.datasets,
+        "include": args.include,
         "files": [],
     }
 
-    for name in wanted_file_names(args.datasets):
+    seen: set[str] = set()
+    for name in wanted_file_names(args.datasets, args.include):
+        if name in seen:
+            continue
+        seen.add(name)
+
         if name not in files:
             raise FileNotFoundError(f"{name} was not found in Zenodo record {args.record_id}")
 

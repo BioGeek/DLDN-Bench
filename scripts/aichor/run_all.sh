@@ -20,8 +20,10 @@ fi
 PREDICTIONS_DIR="${OUTPUT_ROOT}/predictions"
 METRICS_DIR="${OUTPUT_ROOT}/metrics"
 PLOTS_DIR="${OUTPUT_ROOT}/plots"
+PUBLISHED_DIR="${OUTPUT_ROOT}/published_reproduction"
 LOG_DIR="${OUTPUT_ROOT}/logs"
 PLOT_INPUT_DIR="${DLDN_PLOT_INPUT_DIR:-${WORK_ROOT}/plot_inputs}"
+PUBLISHED_WORK_DIR="${DLDN_PUBLISHED_WORK_DIR:-${WORK_ROOT}/published_reproduction_work}"
 
 MODEL="${DLDN_INSTANOVO_MODEL:-instanovo-v1.2.0}"
 BATCH_SIZE="${DLDN_BATCH_SIZE:-128}"
@@ -29,7 +31,7 @@ NUM_WORKERS="${DLDN_NUM_WORKERS:-8}"
 LOG_INTERVAL="${DLDN_LOG_INTERVAL:-100}"
 NUM_BEAMS="${DLDN_NUM_BEAMS:-5}"
 
-mkdir -p "${DATA_DIR}" "${PREDICTIONS_DIR}" "${METRICS_DIR}" "${PLOTS_DIR}" "${LOG_DIR}"
+mkdir -p "${DATA_DIR}" "${PREDICTIONS_DIR}" "${METRICS_DIR}" "${PLOTS_DIR}" "${PUBLISHED_DIR}" "${LOG_DIR}"
 
 sync_outputs() {
   local status=$?
@@ -66,10 +68,16 @@ if torch.cuda.is_available():
 PY
 } | tee "${LOG_DIR}/environment.txt"
 
+DOWNLOAD_INCLUDE=(mgf instanovo)
+if [[ "${DLDN_RECREATE_PUBLISHED:-0}" == "1" ]]; then
+  DOWNLOAD_INCLUDE=(mgf all_predictions)
+fi
+
 python scripts/aichor/download_zenodo_data.py \
   --output-dir "${DATA_DIR}" \
   --metadata-out "${OUTPUT_ROOT}/downloads/zenodo_downloads.json" \
   --datasets "${DATASETS[@]}" \
+  --include "${DOWNLOAD_INCLUDE[@]}" \
   2>&1 | tee "${LOG_DIR}/download.log"
 
 if [[ -n "${DLDN_RECOVER_PREDICTIONS_FROM:-}" ]]; then
@@ -132,6 +140,24 @@ if [[ "${DLDN_RUN_PLOTS:-0}" == "1" ]]; then
     --output-dir "${PLOTS_DIR}" \
     --datasets "${DATASETS[@]}" \
     2>&1 | tee "${LOG_DIR}/plot_precision_coverage.log"
+fi
+
+if [[ "${DLDN_RECREATE_PUBLISHED:-0}" == "1" ]]; then
+  PUBLISHED_ARGS=()
+  if [[ "${DLDN_INCLUDE_INSTANOVO_V1_2:-1}" == "1" ]]; then
+    PUBLISHED_ARGS+=(--include-instanovo-v1-2 --predictions-dir "${PREDICTIONS_DIR}")
+  fi
+  if [[ "${DLDN_SAVE_PUBLISHED_ALIGNED:-0}" == "1" ]]; then
+    PUBLISHED_ARGS+=(--save-aligned)
+  fi
+
+  python scripts/aichor/recreate_published_benchmark.py \
+    --data-dir "${DATA_DIR}" \
+    --work-dir "${PUBLISHED_WORK_DIR}" \
+    --output-dir "${PUBLISHED_DIR}" \
+    --datasets "${DATASETS[@]}" \
+    "${PUBLISHED_ARGS[@]}" \
+    2>&1 | tee "${LOG_DIR}/published_reproduction.log"
 fi
 
 echo "Finished: $(date --iso-8601=seconds)" | tee -a "${LOG_DIR}/environment.txt"

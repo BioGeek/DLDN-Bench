@@ -221,12 +221,25 @@ def create_result_csv(ground_truth_file_path,
 
         additional_result_df = pd.read_csv(additional_result_file_path)
 
-        additional_result_df['pos_index'] = range(len(additional_result_df))
+        if 'scan_number' in additional_result_df.columns:
+            additional_result_df['pos_index'] = additional_result_df['scan_number'].astype(int)
+        else:
+            additional_result_df['pos_index'] = range(len(additional_result_df))
 
         # Use the same format as InstaNovo - expecting 'predictions' and 'probabilities' columns
-        if 'predictions' in additional_result_df.columns and 'scores' in additional_result_df.columns:
-            additional_result_df.rename(columns={'predictions': f'{additional_result_name}_seq', 
-                                               'scores': f'{additional_result_name}_score'}, inplace=True)
+        if 'predictions' in additional_result_df.columns:
+            additional_score_candidates = ['scores', 'log_probs', 'log_probabilities', 'score']
+            additional_score_col = next(
+                (col for col in additional_score_candidates if col in additional_result_df.columns),
+                None,
+            )
+            if additional_score_col is None:
+                raise ValueError(
+                    f"Could not find a score column for {additional_result_name}. "
+                    f"Columns: {additional_result_df.columns.tolist()}"
+                )
+            additional_result_df.rename(columns={'predictions': f'{additional_result_name}_seq',
+                                               additional_score_col: f'{additional_result_name}_score'}, inplace=True)
         else:
             # Alternative: look for common column names and rename them
             # This assumes the file has 'sequence' and 'score' columns or similar
