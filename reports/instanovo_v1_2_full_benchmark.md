@@ -111,6 +111,26 @@ Combined v1.2.0 improvement over v1.1:
 - Peptide AUC: `+0.022441`
 - Amino-acid AUC: `+0.019618`
 
+## Interpretation
+
+InstaNovo v1.2.0 improves over the Zenodo InstaNovo v1.1 transformer predictions on every evaluated dataset and at both peptide and amino-acid resolution. The aggregate gain is `+0.022441` peptide AUC and `+0.019618` amino-acid AUC, corresponding to relative improvements of `+2.42%` and `+2.05%`.
+
+| Dataset | Peptide AUC delta | Peptide relative delta | AA AUC delta | AA relative delta |
+|---|---:|---:|---:|---:|
+| `PXD043425` | +0.081617 | +10.22% | +0.072008 | +8.17% |
+| `PXD006882` | +0.011712 | +1.21% | +0.011098 | +1.13% |
+| `PXD012824` | +0.027114 | +2.91% | +0.024126 | +2.51% |
+| `PXD043200` | +0.015131 | +1.63% | +0.014620 | +1.53% |
+| `ALL` | +0.022441 | +2.42% | +0.019618 | +2.05% |
+
+The largest absolute improvement is on `PXD043425`, where peptide AUC rises from `0.798529` to `0.880146` and amino-acid AUC rises from `0.880913` to `0.952921`. This dataset is only about `9.0%` of the combined scored rowset, so it does not dominate the aggregate despite being the clearest win.
+
+`PXD006882` is already near saturation for v1.1, so the absolute improvement is smaller but still positive: v1.2.0 reaches `0.982373` peptide AUC and `0.993688` amino-acid AUC. This is the only individual dataset where v1.2.0 exceeds the manuscript headline InstaNovo references of `0.974` peptide AUC and `0.985` amino-acid AUC.
+
+The aggregate result is weighted most heavily by `PXD043200`, which contributes about `49.2%` of the scored rows, followed by `PXD012824` at about `25.3%`. On those two largest datasets, v1.2.0 gives moderate but consistent gains, which explains why the combined curve improves clearly but does not jump as much as `PXD043425`.
+
+The precision-coverage plots should be read as confidence-threshold behavior, not just endpoint accuracy. Because AUC improves on every dataset, the v1.2.0 confidence ranking is better overall: across the coverage range, retained predictions are more precise on average than the corresponding v1.1 retained predictions.
+
 ## Relation To Published Numbers
 
 The manuscript headline reference values are:
@@ -118,7 +138,7 @@ The manuscript headline reference values are:
 - Published InstaNovo peptide AUC: `0.974`
 - Published InstaNovo amino-acid AUC: `0.985`
 
-The combined benchmark result is below those headline values, but v1.2.0 improves over the Zenodo v1.1 transformer predictions on every dataset in this run.
+The combined benchmark result is below those headline values, but v1.2.0 improves over the Zenodo v1.1 transformer predictions on every dataset in this run. This comparison is not an exact reproduction of the manuscript Figure 1 headline rowset: it compares only InstaNovo v1.1 and v1.2.0 on their aligned, post-filtering intersection. The separate all-tool Figure 1 reproduction workflow is the appropriate place to compare ContraNovo, MS-GF+, and the manuscript's original all-tool intersection.
 
 Combined deltas vs the manuscript headline reference:
 
