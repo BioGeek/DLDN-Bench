@@ -151,7 +151,7 @@ def extract_correct_title_part(line):
 ############### Benchmark mgf processing ###############
 
 def parse_benchmark_mgf(ground_truth_file_path):
-    mgf_file = mgf.IndexedMGF(ground_truth_file_path)
+    mgf_file = mgf.IndexedMGF(str(ground_truth_file_path))
     titles = []  # List to store titles for DataFrame
     seqs = []
 
