@@ -26,8 +26,3 @@ spec:
         cpus: 16
         ramRatio: 8
         shmSizeGB: 16
-        accelerators:
-          gpu:
-            count: 1
-            product: NVIDIA-H100-80GB-HBM3
-            type: gpu

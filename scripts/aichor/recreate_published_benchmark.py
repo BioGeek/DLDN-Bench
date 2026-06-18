@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import posixpath
 import sys
 from pathlib import Path
 
@@ -65,6 +66,32 @@ FIGURE1_DE_NOVO_PLUS_TOOLS = (
     "contranovo",
     "instanovo_v1_2",
 )
+
+
+def iter_files(source: Path) -> list[Path]:
+    if not source.exists():
+        return []
+    return sorted(path for path in source.rglob("*") if path.is_file())
+
+
+def sync_output_dir(source: Path, destination: str | None) -> None:
+    if not destination:
+        return
+
+    import fsspec
+
+    fs, root = fsspec.core.url_to_fs(destination)
+    root = root.rstrip("/")
+    count = 0
+    for path in iter_files(source):
+        rel = path.relative_to(source).as_posix()
+        target = posixpath.join(root, rel)
+        parent = posixpath.dirname(target)
+        if parent:
+            fs.makedirs(parent, exist_ok=True)
+        fs.put_file(str(path), target)
+        count += 1
+    print(f"Incrementally synced {count} published reproduction files to {destination.rstrip('/')}/")
 
 
 def calculate_metrics(df: pd.DataFrame, tool_name: str) -> dict[str, float | int]:
@@ -282,6 +309,14 @@ def write_markdown(summary: pd.DataFrame, output_path: Path) -> None:
     output_path.write_text("\n".join(lines) + "\n")
 
 
+def write_summary_files(metric_rows: list[dict[str, object]], output_dir: Path, stem: str) -> pd.DataFrame:
+    summary = pd.DataFrame(metric_rows)
+    summary.to_csv(output_dir / f"{stem}.csv", index=False)
+    (output_dir / f"{stem}.json").write_text(json.dumps(summary.to_dict("records"), indent=2) + "\n")
+    write_markdown(summary, output_dir / f"{stem}.md")
+    return summary
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--data-dir", required=True, type=Path)
@@ -291,6 +326,7 @@ def main() -> int:
     parser.add_argument("--datasets", nargs="+", default=list(DEFAULT_DATASETS))
     parser.add_argument("--include-instanovo-v1-2", action="store_true")
     parser.add_argument("--save-aligned", action="store_true")
+    parser.add_argument("--sync-output-root")
     args = parser.parse_args()
 
     args.work_dir.mkdir(parents=True, exist_ok=True)
@@ -331,6 +367,8 @@ def main() -> int:
 
         if args.save_aligned:
             original.to_csv(args.output_dir / f"{dataset}_published_all_tools_aligned.csv", index=False)
+        write_summary_files(metric_rows, args.output_dir, "published_figure1_auc_reproduction_partial")
+        sync_output_dir(args.output_dir, args.sync_output_root)
 
         if args.include_instanovo_v1_2:
             if args.predictions_dir is None:
@@ -363,6 +401,8 @@ def main() -> int:
 
             if args.save_aligned:
                 plus.to_csv(args.output_dir / f"{dataset}_published_all_tools_plus_v1_2_aligned.csv", index=False)
+            write_summary_files(metric_rows, args.output_dir, "published_figure1_auc_reproduction_partial")
+            sync_output_dir(args.output_dir, args.sync_output_root)
 
         if not args.save_aligned:
             intersection_path.unlink(missing_ok=True)
@@ -391,6 +431,8 @@ def main() -> int:
             output_dir=args.output_dir,
             tool_names=FIGURE1_DE_NOVO_TOOLS,
         )
+        write_summary_files(metric_rows, args.output_dir, "published_figure1_auc_reproduction_partial")
+        sync_output_dir(args.output_dir, args.sync_output_root)
 
     if len(plus_frames) > 1:
         combined_plus = pd.concat(plus_frames, ignore_index=True)
@@ -416,14 +458,12 @@ def main() -> int:
             output_dir=args.output_dir,
             tool_names=FIGURE1_DE_NOVO_PLUS_TOOLS,
         )
+        write_summary_files(metric_rows, args.output_dir, "published_figure1_auc_reproduction_partial")
+        sync_output_dir(args.output_dir, args.sync_output_root)
 
-    summary = pd.DataFrame(metric_rows)
+    summary = write_summary_files(metric_rows, args.output_dir, "published_figure1_auc_reproduction")
     summary_path = args.output_dir / "published_figure1_auc_reproduction.csv"
-    summary.to_csv(summary_path, index=False)
-    (args.output_dir / "published_figure1_auc_reproduction.json").write_text(
-        json.dumps(summary.to_dict("records"), indent=2) + "\n"
-    )
-    write_markdown(summary, args.output_dir / "published_figure1_auc_reproduction.md")
+    sync_output_dir(args.output_dir, args.sync_output_root)
     print(summary.to_string(index=False))
     print(f"Wrote {summary_path}")
     return 0
