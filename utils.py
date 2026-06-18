@@ -19,42 +19,29 @@ import matplotlib.pyplot as plt
 from calculate_criteria import aa_match_batch
 
 def modify_de_novo_result_with_filter_out_df(result_df, mod_dict):
+  sequences = result_df['sequence'].fillna("").astype(str)
+  mass_delta_pattern = r'\+\d+\.\d+|\+\d+|\-\d+\.\d+|\-\d+'
+  total_matches = int(sequences.str.count(mass_delta_pattern).sum())
 
-  modified_seqs = []
-  unmodified_seqs = []
+  mod_tokens = set()
+  for mod in mod_dict:
+    mod_tokens.update(re.findall(mass_delta_pattern, mod))
 
-  num_replaced = 0
-  num_affected = 0
+  if mod_tokens:
+    affected_pattern = "|".join(re.escape(token) for token in sorted(mod_tokens, key=len, reverse=True))
+    mask = sequences.str.contains(affected_pattern, regex=True, na=False)
+    num_replaced = int(sum(sequences.str.count(re.escape(token)).sum() for token in mod_tokens))
+  else:
+    mask = pd.Series(False, index=result_df.index)
+    num_replaced = 0
 
-  total_matches = 0
-  for seq in result_df['sequence']:
-    matches = re.findall(r'\+\d+\.\d+|\+\d+|\-\d+\.\d+|\-\d+', seq)
-    total_matches += len(matches)
-
-  for idx, seq in tqdm(result_df['sequence'].items()):
-    modified_seq = seq
-    matches = re.findall(r'\+\d+\.\d+|\+\d+|\-\d+\.\d+|\-\d+', modified_seq)
-
-    affected = False
-    for match in matches:
-      if match in mod_dict:
-        num_replaced += 1
-        affected = True
-
-    if affected:
-      modified_seqs.append(modified_seq)
-      num_affected += 1
-    else:
-      unmodified_seqs.append(seq)
-
-  # Use pandas filtering to split DataFrame
-  mask = result_df['sequence'].isin(modified_seqs)
   affected_df = result_df[mask]
   unaffected_df = result_df[~mask]
+  num_affected = int(mask.sum())
 
   print(f"Num replaced: {num_replaced}")
-  print(f"Percent replaced: {num_replaced/total_matches*100:.2f}%")
-  print(f"Percent affected: {num_affected/len(result_df)*100:.2f}%")
+  print(f"Percent replaced: {num_replaced/total_matches*100:.2f}%" if total_matches else "Percent replaced: 0.00%")
+  print(f"Percent affected: {num_affected/len(result_df)*100:.2f}%" if len(result_df) else "Percent affected: 0.00%")
 
   return unaffected_df, affected_df
 
@@ -65,16 +52,9 @@ def instanovo_filter_out_unspecified_mods(instanovo_df, unimod_dict, toolname):
     total_rows = len(instanovo_df)  # Save initial row count for stats
 
     # Step 1: Apply known modifications, ensuring values are treated as strings
-    for index, row in instanovo_df.iterrows():
-        seq = row[seq_pred_col]
-        # Convert to string if not NaN, or use an empty string otherwise.
-        if pd.isnull(seq):
-            seq = ""
-        else:
-            seq = str(seq)
-        for original, modified in unimod_dict.items():
-            seq = seq.replace(original, modified)
-        instanovo_df.at[index, seq_pred_col] = seq
+    instanovo_df[seq_pred_col] = instanovo_df[seq_pred_col].fillna("").astype(str)
+    for original, modified in unimod_dict.items():
+        instanovo_df[seq_pred_col] = instanovo_df[seq_pred_col].str.replace(original, modified, regex=False)
 
     # Step 2: Identify rows that still contain unknown UNIMOD modifications.
     # Note: Removing .any() so that we get a boolean mask per row.
@@ -225,19 +205,12 @@ def parse_file_to_dataframe(file_path):
 ############### MSGF+ output processing ###############
 
 def parse_mgfsplus_mods(result_df, mod_dict):
-
-    for index, row in result_df.iterrows():
-        seq = row['peptide_seq']
-
-        # Apply modifications from the dictionary
-        for original, modified in mod_dict.items():
-            seq = seq.replace(original, modified)
-
-        # Update the DataFrame with the modified peptide sequence
-        result_df.at[index, 'peptide_seq'] = seq
+    result_df['peptide_seq'] = result_df['peptide_seq'].fillna("").astype(str)
+    for original, modified in mod_dict.items():
+        result_df['peptide_seq'] = result_df['peptide_seq'].str.replace(original, modified, regex=False)
 
     # Adjust this line to extract the sequence between the first and last points
-    result_df['peptide_seq'] = result_df['peptide_seq'].apply(lambda x: '.'.join(x.split('.')[1:-1]) if '.' in x else x)
+    result_df['peptide_seq'] = result_df['peptide_seq'].str.replace(r'^[^.]*\.(.*)\.[^.]*$', r'\1', regex=True)
 
     return result_df
 
@@ -278,4 +251,3 @@ def calculate_aa_precision_coverage(psm_sequences, aa_dict, tool_name):
     scores = np.array(scores_repeated[:len(aa_matches)])
 
     return coverage, precision, scores
-

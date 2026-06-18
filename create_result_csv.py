@@ -30,9 +30,9 @@ def create_result_csv(ground_truth_file_path,
 
     msgfplus_result_df = pd.read_parquet(msgfplus_result_file_path)
 
-    msgfplus_result_df['scannr'] = msgfplus_result_df['psm_id'].apply(lambda x: x.split('_')[-3] if len(x.split('_')) >= 5 else None)
-
-    msgfplus_result_df['pos_index'] = msgfplus_result_df['psm_id'].apply(lambda x: int(x.split('_')[-5]) - 1 if len(x.split('_')) >= 5 else None)
+    psm_id_parts = msgfplus_result_df['psm_id'].astype(str).str.split('_')
+    msgfplus_result_df['scannr'] = psm_id_parts.str[-3]
+    msgfplus_result_df['pos_index'] = pd.to_numeric(psm_id_parts.str[-5], errors='coerce').sub(1)
 
     filter_msgfplus = False
 
@@ -87,24 +87,19 @@ def create_result_csv(ground_truth_file_path,
     # Check if header_line was found
     if header_line is not None:
         # Now read the data from the next line after the header
-        novor_result_df = pd.read_csv(novor_result_file_path, skiprows=header_line + 1, header=None)
-        # Set the column names manually
-        novor_result_df.columns = ['id', 'scanNum', 'RT', 'mz(data)', 'z', 'pepMass(denovo)', 'err(data-denovo)', 'ppm(1e6*err/(mz*z))', 'score', 'peptide', 'aaScore']
+        novor_result_df = pd.read_csv(
+            novor_result_file_path,
+            skiprows=header_line + 1,
+            header=None,
+            usecols=[8, 9],
+            names=['score', 'peptide'],
+        )
     else:
         print("Header line not found.")
 
-    for index, row in novor_result_df.iterrows():
-        peptide = row['peptide']
-
-        # Apply modifications directly within this loop
-        for mod, value in novor_modification_dict.items():
-            peptide = peptide.replace(mod, value)
-
-        # Strip leading and trailing whitespaces
-        peptide = peptide.strip()
-
-        # For demonstration, just updating the peptide back in the DataFrame
-        novor_result_df.at[index, 'peptide'] = peptide
+    novor_result_df['peptide'] = novor_result_df['peptide'].fillna("").astype(str).str.strip()
+    for mod, value in novor_modification_dict.items():
+        novor_result_df['peptide'] = novor_result_df['peptide'].str.replace(mod, value, regex=False)
 
     novor_result_df['pos_index'] = range(len(novor_result_df))
 
@@ -159,13 +154,10 @@ def create_result_csv(ground_truth_file_path,
 
     print('parse ContraNovo prediction file')
 
-    contranovo_result_df = pd.DataFrame()
-
-    for contranovo_result_file_path in contranovo_result_file_path_list:
-
-        curr_contranovo_result_df = parse_file_to_dataframe(contranovo_result_file_path)
-
-        contranovo_result_df = pd.concat([contranovo_result_df, curr_contranovo_result_df], ignore_index=True)
+    contranovo_result_df = pd.concat(
+        [parse_file_to_dataframe(path) for path in contranovo_result_file_path_list],
+        ignore_index=True,
+    )
 
 
     ## only keep prediction with highest score per title
