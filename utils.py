@@ -55,6 +55,7 @@ def instanovo_filter_out_unspecified_mods(instanovo_df, unimod_dict, toolname):
     instanovo_df[seq_pred_col] = instanovo_df[seq_pred_col].fillna("").astype(str)
     for original, modified in unimod_dict.items():
         instanovo_df[seq_pred_col] = instanovo_df[seq_pred_col].str.replace(original, modified, regex=False)
+    instanovo_df[seq_pred_col] = instanovo_df[seq_pred_col].astype(object)
 
     # Step 2: Identify rows that still contain unknown UNIMOD modifications.
     # Note: Removing .any() so that we get a boolean mask per row.
@@ -211,6 +212,7 @@ def parse_mgfsplus_mods(result_df, mod_dict):
 
     # Adjust this line to extract the sequence between the first and last points
     result_df['peptide_seq'] = result_df['peptide_seq'].str.replace(r'^[^.]*\.(.*)\.[^.]*$', r'\1', regex=True)
+    result_df['peptide_seq'] = result_df['peptide_seq'].astype(object)
 
     return result_df
 

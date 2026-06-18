@@ -100,6 +100,7 @@ def create_result_csv(ground_truth_file_path,
     novor_result_df['peptide'] = novor_result_df['peptide'].fillna("").astype(str).str.strip()
     for mod, value in novor_modification_dict.items():
         novor_result_df['peptide'] = novor_result_df['peptide'].str.replace(mod, value, regex=False)
+    novor_result_df['peptide'] = novor_result_df['peptide'].astype(object)
 
     novor_result_df['pos_index'] = range(len(novor_result_df))
 
