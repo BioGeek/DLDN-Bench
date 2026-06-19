@@ -223,7 +223,9 @@ These local artifacts are repo-sized and are reasonable to keep in git. The reco
 | `PXD012824` | 625.9 MiB |
 | `PXD043200` | 1014.3 MiB |
 
-For manuscript/Figure 1 reproduction, the more relevant artifacts will come from the all-tools run: `published_figure1_auc_reproduction.*`, `figure1_precision_coverage/`, `figure1_precision_coverage_tables/`, and `figure1_venn/`. Those should be downloaded after that run completes, while leaving any repeated `predictions/` CSVs in the AIchor S3 bucket.
+The larger files and additional benchmark outputs are archived in the published Zenodo record:
+[DLDN-Bench InstaNovo v1.2.2 Figure 1 benchmark outputs](https://zenodo.org/records/19627459).
+That record includes the prediction CSVs, fixed-colour Figure 1 reproduction plots, Venn diagrams, AUC summaries, workflow logs, and download manifest. Zenodo asset filenames are flattened with `__` standing in for original path separators.
 
 ## Earlier Local Calibration
 
