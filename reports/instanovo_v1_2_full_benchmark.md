@@ -176,7 +176,7 @@ Plot output prefix:
 output/095080d3-3f19-41c7-a45b-f1a95a27b43a/plots/
 ```
 
-Uploaded plot files:
+Uploaded plot files from the original plot-only run:
 
 - `plots/PXD043425_peptide_precision_coverage.png`
 - `plots/PXD043425_aminoacid_precision_coverage.png`
@@ -186,8 +186,11 @@ Uploaded plot files:
 - `plots/PXD012824_aminoacid_precision_coverage.png`
 - `plots/PXD043200_peptide_precision_coverage.png`
 - `plots/PXD043200_aminoacid_precision_coverage.png`
-- `plots/ALL_peptide_precision_coverage.png`
-- `plots/ALL_aminoacid_precision_coverage.png`
+
+The aggregate `ALL` plots tracked in this branch were later replaced with the fixed-colour all-tools Figure 1 reproduction plots that include InstaNovo v1.2.0. These use the same flattened filenames as the Zenodo upload:
+
+- `plots/published_reproduction__figure1_precision_coverage__ALL_published_all_tools_plus_v1_2_peptide_precision_coverage.png`
+- `plots/published_reproduction__figure1_precision_coverage__ALL_published_all_tools_plus_v1_2_aminoacid_precision_coverage.png`
 
 The same successful run also re-uploaded the four recovered v1.2.0 prediction CSVs under:
 
@@ -208,9 +211,10 @@ Included files:
 - `metrics/instanovo_v1_1_vs_v1_2_metrics.csv`
 - `metrics/instanovo_v1_1_vs_v1_2_metrics.json`
 - `metrics/instanovo_v1_1_vs_v1_2_metrics.md`
-- the ten precision-coverage PNGs from `output/095080d3-3f19-41c7-a45b-f1a95a27b43a/plots/`
+- eight per-dataset precision-coverage PNGs from `output/095080d3-3f19-41c7-a45b-f1a95a27b43a/plots/`
+- two fixed-colour aggregate all-tools Figure 1 reproduction PNGs with Zenodo-flattened filenames
 
-These local artifacts are `3.8M` total and are reasonable to keep in git. The recovered InstaNovo v1.2.0 prediction CSVs are not included because they are `2.1 GiB` total:
+These local artifacts are repo-sized and are reasonable to keep in git. The recovered InstaNovo v1.2.0 prediction CSVs are not included because they are `2.1 GiB` total:
 
 | Dataset | Prediction CSV size |
 |---|---:|
