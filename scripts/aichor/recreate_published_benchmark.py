@@ -213,17 +213,20 @@ def write_precision_coverage_plots(
     rowset: str,
     output_dir: Path,
     tool_display_names: dict[str, str],
+    save_tables: bool,
 ) -> None:
     plot_dir = output_dir / "figure1_precision_coverage"
-    table_dir = output_dir / "figure1_precision_coverage_tables"
     plot_dir.mkdir(parents=True, exist_ok=True)
-    table_dir.mkdir(parents=True, exist_ok=True)
+    table_dir = None
+    if save_tables:
+        table_dir = output_dir / "figure1_precision_coverage_tables"
+        table_dir.mkdir(parents=True, exist_ok=True)
     plot_precision_coverage_curves(
         result_df=df,
         tool_name_dict=tool_display_names,
         benchmark_dataset_name=f"{dataset}_{rowset}",
         save_plot_path=str(plot_dir),
-        save_tables_path=str(table_dir),
+        save_tables_path=str(table_dir) if table_dir is not None else None,
     )
 
 
@@ -326,6 +329,7 @@ def main() -> int:
     parser.add_argument("--datasets", nargs="+", default=list(DEFAULT_DATASETS))
     parser.add_argument("--include-instanovo-v1-2", action="store_true")
     parser.add_argument("--save-aligned", action="store_true")
+    parser.add_argument("--skip-plot-tables", action="store_true")
     parser.add_argument("--sync-output-root")
     args = parser.parse_args()
 
@@ -355,6 +359,7 @@ def main() -> int:
             rowset="published_all_tools",
             output_dir=args.output_dir,
             tool_display_names=FIGURE1_ORIGINAL_DISPLAY_NAMES,
+            save_tables=not args.skip_plot_tables,
         )
         write_venn_plot(
             original,
@@ -389,6 +394,7 @@ def main() -> int:
                 rowset="published_all_tools_plus_v1_2",
                 output_dir=args.output_dir,
                 tool_display_names=FIGURE1_PLUS_DISPLAY_NAMES,
+                save_tables=not args.skip_plot_tables,
             )
             write_venn_plot(
                 plus,
@@ -423,6 +429,7 @@ def main() -> int:
             rowset="published_all_tools",
             output_dir=args.output_dir,
             tool_display_names=FIGURE1_ORIGINAL_DISPLAY_NAMES,
+            save_tables=not args.skip_plot_tables,
         )
         write_venn_plot(
             combined,
@@ -450,6 +457,7 @@ def main() -> int:
             rowset="published_all_tools_plus_v1_2",
             output_dir=args.output_dir,
             tool_display_names=FIGURE1_PLUS_DISPLAY_NAMES,
+            save_tables=not args.skip_plot_tables,
         )
         write_venn_plot(
             combined_plus,

@@ -10,7 +10,7 @@ builder:
 spec:
   operator: pytorch
   image: dldn-bench-instanovo-aichor
-  command: "env DLDN_COMPARE_ONLY=1 DLDN_SKIP_COMPARE=1 DLDN_RECREATE_PUBLISHED=1 DLDN_INCLUDE_INSTANOVO_V1_2=1 DLDN_RECOVER_PREDICTIONS_FROM=s3://dtu-denovo-s-2e6da747d6d34f62-outputs/output/b96234df-2fff-4239-8288-faeef8ae81b0/ bash scripts/aichor/run_all.sh"
+  command: "env DLDN_COMPARE_ONLY=1 DLDN_SKIP_COMPARE=1 DLDN_RECREATE_PUBLISHED=1 DLDN_INCLUDE_INSTANOVO_V1_2=1 DLDN_SKIP_PLOT_TABLES=1 DLDN_RECOVER_PREDICTIONS_FROM=s3://dtu-denovo-s-2e6da747d6d34f62-outputs/output/9da11897-c921-4b09-beb2-11565dba0e91/ bash scripts/aichor/run_all.sh"
   tensorboard:
     enabled: false
   storage:

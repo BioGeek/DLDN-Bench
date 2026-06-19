@@ -150,6 +150,9 @@ if [[ "${DLDN_RECREATE_PUBLISHED:-0}" == "1" ]]; then
   if [[ "${DLDN_SAVE_PUBLISHED_ALIGNED:-0}" == "1" ]]; then
     PUBLISHED_ARGS+=(--save-aligned)
   fi
+  if [[ "${DLDN_SKIP_PLOT_TABLES:-0}" == "1" ]]; then
+    PUBLISHED_ARGS+=(--skip-plot-tables)
+  fi
   if [[ -n "${REMOTE_OUTPUT_ROOT}" ]]; then
     PUBLISHED_ARGS+=(--sync-output-root "${REMOTE_OUTPUT_ROOT%/}/published_reproduction")
   fi
