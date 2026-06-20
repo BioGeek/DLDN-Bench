@@ -20,7 +20,10 @@ The AIchor job downloads only the relevant Zenodo files for each dataset:
 - `{dataset}_benchmark_dataset.mgf`
 - `{dataset}_benchmark_dataset_instanovo_pred.csv`
 
-The all-tools Figure 1 reproduction additionally uses the archived MS-GF+, ContraNovo, CasaNovo, Pi-HelixNovo, Novor, and PepNovo+ prediction files from the same benchmark record.
+The input MGF files and published tool predictions come from the original benchmark authors' Zenodo record:
+[DNDL-Bench annotated benchmark datasets and prediction files](https://zenodo.org/records/19627459).
+
+The all-tools Figure 1 reproduction additionally uses the archived MS-GF+, ContraNovo, CasaNovo, Pi-HelixNovo, Novor, and PepNovo+ prediction files from that original benchmark record.
 
 ## What Was Added
 
@@ -239,8 +242,8 @@ These local artifacts are repo-sized and are reasonable to keep in git. The reco
 | `PXD012824` | 625.9 MiB |
 | `PXD043200` | 1014.3 MiB |
 
-The larger files and additional benchmark outputs are archived in the published Zenodo record:
-[DLDN-Bench InstaNovo v1.2.2 Figure 1 benchmark outputs](https://zenodo.org/records/19627459).
+The larger files and additional benchmark outputs from this InstaNovo v1.2.2 update are archived in a separate published Zenodo record:
+[Updated DLDN-Bench de novo sequencing benchmark outputs with InstaNovo v1.2.2](https://zenodo.org/records/20767591).
 That record includes the prediction CSVs, fixed-colour Figure 1 reproduction plots, Venn diagrams, AUC summaries, workflow logs, and download manifest. Zenodo asset filenames are flattened with `__` standing in for original path separators.
 
 The bulky intermediate precision-coverage table CSVs are not included in the Zenodo record because they total approximately `46 GiB`, but they can be provided on request.
