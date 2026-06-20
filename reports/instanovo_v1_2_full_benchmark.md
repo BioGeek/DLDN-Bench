@@ -1,11 +1,12 @@
 # InstaNovo v1.2.2 AIchor Full Benchmark
 
 Date: 2026-06-17
+Last updated: 2026-06-20
 Branch: `aichor`
 
 ## Scope
 
-Benchmarked Zenodo InstaNovo v1.1 transformer predictions against latest installed InstaNovo `1.2.2`, using the `instanovo-v1.2.0` transformer checkpoint.
+Benchmarked Zenodo InstaNovo v1.1 transformer predictions against latest installed InstaNovo `1.2.2`, using the `instanovo-v1.2.0` transformer checkpoint. The branch also contains the later all-tools Figure 1 reproduction plots and AUC summary extended with InstaNovo v1.2.0 predictions.
 
 Datasets:
 
@@ -19,6 +20,8 @@ The AIchor job downloads only the relevant Zenodo files for each dataset:
 - `{dataset}_benchmark_dataset.mgf`
 - `{dataset}_benchmark_dataset_instanovo_pred.csv`
 
+The all-tools Figure 1 reproduction additionally uses the archived MS-GF+, ContraNovo, CasaNovo, Pi-HelixNovo, Novor, and PepNovo+ prediction files from the same benchmark record.
+
 ## What Was Added
 
 Created and pushed the `aichor` branch with:
@@ -29,14 +32,6 @@ Created and pushed the `aichor` branch with:
 - Recovery logic for failed AIchor runs so completed prediction CSVs are reused.
 - Compare-only and plot-only modes to avoid rerunning expensive prediction work.
 - A schema-flexible v1.1 loader because `PXD043200` uses `predictions` / `log_probabilities` instead of `transformer_predictions` / `transformer_log_probabilities`.
-
-Recent branch commits:
-
-- `738acd6` - add AIchor precision-coverage plotting workflow.
-- `f2e3f5a` - support compare-only metrics run.
-- `64efb1b` - recover multiple AIchor prediction outputs.
-- `68640fc` - recover prior AIchor prediction outputs.
-- `ec55cad` - avoid InstaNovo internal AIchor bucket upload failures.
 
 ## Runtime Environment
 
@@ -57,7 +52,7 @@ Prediction work completed in AIchor and was recovered across runs:
 - `46c58e9d-b5f6-43ae-a18a-8112eeec7d6c`: recovered `PXD043425`, completed and uploaded `PXD006882`, then failed after post-save upload handling.
 - `b96234df-2fff-4239-8288-faeef8ae81b0`: recovered previous outputs, completed `PXD012824` and `PXD043200`, then failed during comparison before the v1.1 schema patch.
 - `7c3e0e59-35c9-41ea-81d3-ab8cbdb102fa`: compare-only run; recovered all four v1.2.0 prediction CSVs and completed metrics successfully.
-- `095080d3-3f19-41c7-a45b-f1a95a27b43a`: plot-only run submitted from `738acd6`; completed successfully and uploaded precision-coverage plots for all four datasets plus the combined `ALL` rowset.
+- `095080d3-3f19-41c7-a45b-f1a95a27b43a`: plot-only run; completed successfully and uploaded precision-coverage plots for all four datasets plus the combined `ALL` rowset.
 
 Successful metrics output prefix:
 
@@ -138,7 +133,7 @@ The manuscript headline reference values are:
 - Published InstaNovo peptide AUC: `0.974`
 - Published InstaNovo amino-acid AUC: `0.985`
 
-The combined benchmark result is below those headline values, but v1.2.0 improves over the Zenodo v1.1 transformer predictions on every dataset in this run. This comparison is not an exact reproduction of the manuscript Figure 1 headline rowset: it compares only InstaNovo v1.1 and v1.2.0 on their aligned, post-filtering intersection. The separate all-tool Figure 1 reproduction workflow is the appropriate place to compare ContraNovo, MS-GF+, and the manuscript's original all-tool intersection.
+The combined InstaNovo-only benchmark result is below those headline values, but v1.2.0 improves over the Zenodo v1.1 transformer predictions on every dataset in this run. This comparison is not an exact reproduction of the manuscript Figure 1 headline rowset: it compares only InstaNovo v1.1 and v1.2.0 on their aligned, post-filtering intersection.
 
 Combined deltas vs the manuscript headline reference:
 
@@ -146,6 +141,25 @@ Combined deltas vs the manuscript headline reference:
 - v1.1 AA AUC delta: `-0.026642`
 - v1.2.0 peptide AUC delta: `-0.022450`
 - v1.2.0 AA AUC delta: `-0.007024`
+
+## Figure 1 All-Tools Reproduction
+
+The all-tools Figure 1 reproduction was then rerun from the Zenodo prediction files and extended with InstaNovo v1.2.0 predictions. MS-GF+ reproduces the manuscript headline values closely. The de novo tool AUCs are lower than the manuscript headline values on the reconstructed all-dataset rowset, although `PXD006882` reproduces the manuscript ContraNovo and InstaNovo v1.1 numbers closely.
+
+On the reconstructed all-tools-plus-v1.2 rowset, InstaNovo v1.2.0 is the top de novo method by peptide and amino-acid AUC:
+
+| Tool | Rows scored | Peptide AUC | AA AUC |
+|---|---:|---:|---:|
+| MS-GF+ with Percolator | 2,767,525 | 0.997447 | 0.998551 |
+| ContraNovo | 2,767,525 | 0.950945 | 0.972711 |
+| InstaNovo v1.1 Zenodo transformer | 2,767,525 | 0.938361 | 0.966493 |
+| CasaNovo | 2,767,525 | 0.889553 | 0.942696 |
+| Pi-HelixNovo | 2,767,525 | 0.767271 | 0.891850 |
+| Novor | 2,767,525 | 0.199337 | 0.604701 |
+| PepNovo+ | 2,767,525 | 0.075620 | 0.291876 |
+| InstaNovo v1.2.0 transformer | 2,767,525 | 0.957412 | 0.981321 |
+
+The updated all-tools Venn analysis reports `48,884` ContraNovo-only and `205,932` InstaNovo v1.2.0-only correct predictions on the combined rowset.
 
 ## Precision-Coverage Plots
 
@@ -176,7 +190,7 @@ Plot output prefix:
 output/095080d3-3f19-41c7-a45b-f1a95a27b43a/plots/
 ```
 
-Uploaded plot files from the original plot-only run:
+The tracked per-dataset plot files were initially created by this plot-only run as InstaNovo v1.1 vs v1.2.0 plots, but were later replaced in the branch with the corresponding fixed-colour all-tools Figure 1 reproduction plots that include InstaNovo v1.2.0. The retained filenames are:
 
 - `plots/PXD043425_peptide_precision_coverage.png`
 - `plots/PXD043425_aminoacid_precision_coverage.png`
@@ -187,10 +201,11 @@ Uploaded plot files from the original plot-only run:
 - `plots/PXD043200_peptide_precision_coverage.png`
 - `plots/PXD043200_aminoacid_precision_coverage.png`
 
-The aggregate `ALL` plots tracked in this branch were later replaced with the fixed-colour all-tools Figure 1 reproduction plots that include InstaNovo v1.2.0. These use the same flattened filenames as the Zenodo upload:
+The aggregate `ALL` plots and updated Venn plot tracked in this branch also use the fixed-colour all-tools Figure 1 reproduction outputs and the same flattened filenames as the Zenodo upload:
 
 - `plots/published_reproduction__figure1_precision_coverage__ALL_published_all_tools_plus_v1_2_peptide_precision_coverage.png`
 - `plots/published_reproduction__figure1_precision_coverage__ALL_published_all_tools_plus_v1_2_aminoacid_precision_coverage.png`
+- `plots/published_reproduction__figure1_venn__ALL_published_all_tools_plus_v1_2_de_novo_true_positive_venn.png`
 
 The same successful run also re-uploaded the four recovered v1.2.0 prediction CSVs under:
 
@@ -211,8 +226,9 @@ Included files:
 - `metrics/instanovo_v1_1_vs_v1_2_metrics.csv`
 - `metrics/instanovo_v1_1_vs_v1_2_metrics.json`
 - `metrics/instanovo_v1_1_vs_v1_2_metrics.md`
-- eight per-dataset precision-coverage PNGs from `output/095080d3-3f19-41c7-a45b-f1a95a27b43a/plots/`
-- two fixed-colour aggregate all-tools Figure 1 reproduction PNGs with Zenodo-flattened filenames
+- eight per-dataset fixed-colour all-tools Figure 1 precision-coverage PNGs that include InstaNovo v1.2.0
+- two fixed-colour aggregate all-tools Figure 1 precision-coverage PNGs with Zenodo-flattened filenames
+- one fixed-colour aggregate all-tools Figure 1 Venn PNG with a Zenodo-flattened filename
 
 These local artifacts are repo-sized and are reasonable to keep in git. The recovered InstaNovo v1.2.0 prediction CSVs are not included because they are `2.1 GiB` total:
 
@@ -226,6 +242,8 @@ These local artifacts are repo-sized and are reasonable to keep in git. The reco
 The larger files and additional benchmark outputs are archived in the published Zenodo record:
 [DLDN-Bench InstaNovo v1.2.2 Figure 1 benchmark outputs](https://zenodo.org/records/19627459).
 That record includes the prediction CSVs, fixed-colour Figure 1 reproduction plots, Venn diagrams, AUC summaries, workflow logs, and download manifest. Zenodo asset filenames are flattened with `__` standing in for original path separators.
+
+The bulky intermediate precision-coverage table CSVs are not included in the Zenodo record because they total approximately `46 GiB`, but they can be provided on request.
 
 ## Earlier Local Calibration
 
